@@ -9,7 +9,6 @@ In this dataset, there are 4172 images for training, 1044 for validation, 624 fo
 # Generate data and data augmentation 
 
 Using a few techniques to create more image data like sharpening, horizontal flipping, random shear, scale
-
 the size of the image, and translate the pixels to get more training data.
 
 ```
@@ -23,5 +22,80 @@ aug = iaa.pillike.FilterSharpen() #sharpen images
             ),
         ])
 ```
+
+import the modules for training 
+
+```
+import cv2
+import matplotlib.pyplot as plt
+import numpy as np
+import os
+from glob import glob
+from tqdm.auto import tqdm
+import tensorflow as tf
+from tensorflow.keras import layers, models, utils
+from sklearn.model_selection import train_test_split
+import pandas as pd
+import imgaug.augmenters as iaa
+import imgaug as ia
+import seaborn as sns
+```
+
+There are the classes for image classification, which are normal, bacteria, virus.
+
+```
+IMG_SIZE = 200
+BATCH_SIZE = 64
+
+all_class = ['normal', 'bacteria', 'virus']
+class_map = {cls:i for i,cls in enumerate(all_class)} #  'normal':0, 'bacteria': 1, 'virus':2
+class_map
+
+```
+<img width="464" alt="lung_xray" src="https://github.com/chency0315/pneumonia_classification/assets/100465252/a56df749-90ce-43d1-bbf9-a4234754ea40">
+
+#  build the model
+
+For the model, I used VGG19 as the base model and then added a few layers for classifying using relu as an activation function, dropout 0.5 to avoid overfitting,
+at last, used softmax as an activation function to classify into three classes. In addition, freezing the layers of VGG19 saves training time.
+```
+
+tf.keras.backend.clear_session()
+base_model = tf.keras.applications.VGG19(include_top=False, weights='imagenet', input_shape=(IMG_SIZE, IMG_SIZE, 3))
+x = base_model.output
+x = layers.GlobalAveragePooling2D()(x)
+x = layers.Dense(1024, activation='relu')(x)
+x = layers.BatchNormalization()(x)
+x = layers.Dense(100, activation='relu')(x)
+x = layers.Dropout(0.5)(x)
+x = layers.BatchNormalization()(x)
+pred = layers.Dense(3, activation='softmax')(x)
+
+for l in base_model.layers: #freeze Vgg19 all layers
+    l.trainable = False
+model3 = models.Model(base_model.input,pred)
+```
+
+Apply learning rate scheduler, and then after 20 epochs learning rate will be calculated with this formula.
+
+```
+def scheduler(epoch, lr):
+       if epoch < 20:
+            return lr
+       else:
+            return lr * tf.math.exp(-0.1) # after 20 epoches learning rate will be calculated with this formula
+
+model.compile(loss=tf.keras.losses.categorical_crossentropy,
+              optimizer=tf.keras.optimizers.Adam(0.01),
+              metrics=['accuracy'])
+```
+
+plot the categorical accuracy and loss figure
+
+![output](https://github.com/chency0315/pneumonia_classification/assets/100465252/6b4ae209-3f49-4dff-8d20-3d9a4df6f010)
+
+The accuracy score is 0.79
+
+<img width="328" alt="f1score" src="https://github.com/chency0315/pneumonia_classification/assets/100465252/74aada71-c947-46ec-9ba8-c5f8cf7aaaed">
 
 
