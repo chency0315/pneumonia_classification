@@ -12,5 +12,16 @@ Using a few techniques to create more image data like sharpening, horizontal fli
 
 the size of the image, and translate the pixels to get more training data.
 
+```
+aug = iaa.pillike.FilterSharpen() #sharpen images
+        self.seq = iaa.Sequential([
+            iaa.Fliplr(0.5), # 50% horizontal flip
+            iaa.Affine(
+                shear=(-16,16), # random shear -16 ~ +16 degree
+                scale={"x": (0.8, 1.2), "y": (0.8, 1.2)}, # scale x, y: 80%~120%
+                translate_px={"x": (-20, 20), "y": (-20, 20)}, # Translate images by -20 to 20 pixels on x- and y-axis independently 
+            ),
+        ])
+```
 
 
