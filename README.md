@@ -68,7 +68,6 @@ class_map
 For the model, I used VGG19 as the base model and then added a few layers for classifying using relu as an activation function, dropout 0.5 to avoid overfitting,
 at last, used softmax as an activation function to classify into three classes. In addition, freezing the layers of VGG19 saves training time.
 ```
-
 tf.keras.backend.clear_session()
 base_model = tf.keras.applications.VGG19(include_top=False, weights='imagenet', input_shape=(IMG_SIZE, IMG_SIZE, 3))
 x = base_model.output
